@@ -2,13 +2,15 @@ FROM docker.io/rust:1-alpine3.22 AS build
 
 COPY . .
 
-RUN apk add openssl-dev musl-dev openssl-libs-static
+RUN apk update
+RUN apk add openssl-dev musl-dev openssl-libs-static git
 RUN cargo build -r
 RUN objcopy --compress-debug-sections target/release/robotgirl ./robotgirl
 
 FROM docker.io/alpine:3.22.0
 
 # server
+WORKDIR /app
 COPY . .
 COPY --from=build /robotgirl ./robotgirl
 

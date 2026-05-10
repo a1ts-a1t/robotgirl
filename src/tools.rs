@@ -2,10 +2,18 @@ use std::{fs, process::Command};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ReadArgs {
     path: String,
 }
+
+#[cfg(test)]
+impl ReadArgs {
+    pub fn new(path: String) -> Self {
+        Self { path }
+    }
+}
+
 
 pub fn read(path: &str) -> Result<String, String> {
     // TODO: logging
@@ -15,7 +23,7 @@ pub fn read(path: &str) -> Result<String, String> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct WriteArgs {
     path: String,
     content: String,
@@ -30,9 +38,16 @@ pub fn write(path: &str, content: &str) -> Result<String, String> {
 }
 
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ExecArgs {
     args: Vec<String>,
+}
+
+#[cfg(test)]
+impl ExecArgs {
+    pub fn new(args: Vec<String>) -> Self {
+        Self { args }
+    }
 }
 
 pub fn exec(args: &[String]) -> Result<String, String> {
@@ -59,7 +74,7 @@ pub fn exec(args: &[String]) -> Result<String, String> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(tag = "tool", rename_all = "snake_case")]
 pub enum ToolCall {
     Read(ReadArgs),

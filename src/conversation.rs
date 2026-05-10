@@ -21,7 +21,7 @@ pub async fn completion(messages: &[Message]) -> Result<Action, Box<dyn std::err
         }
     };
 
-    let api_messages: Vec<Value> = messages.iter().map(|message| {
+    let mut api_messages: Vec<Value> = messages.iter().map(|message| {
         match message {
             Message::User(content) => json!({ "role": "user", "content": content }),
             Message::Assistant(content) => json!({ "role": "assistant", "content": content }),
@@ -29,15 +29,17 @@ pub async fn completion(messages: &[Message]) -> Result<Action, Box<dyn std::err
         }
     }).collect();
 
+    api_messages.insert(0, json!({ "role": "system", "content": base_system_prompt }));
+
     let body = json!({
         // TODO: this should be in a config
+        "model": "gemma-4-e4b",
         "temperature": 0.1,
         "response_format": { "type": "json_object" },
-        "messages": [
-            { "role": "system", "content": base_system_prompt },
-            api_messages,
-        ],
+        "messages": api_messages,
     });
+
+    println!("{}", serde_json::to_string_pretty(&body).unwrap());
 
     // TODO: this should be in a config
     let api_url = env::var("LLAMA_SERVER_URL")
@@ -45,7 +47,7 @@ pub async fn completion(messages: &[Message]) -> Result<Action, Box<dyn std::err
     
     let client = Client::new();
     let chat_url = format!("{}/v1/chat/completions", api_url);
-    
+
     let response = client.post(&chat_url)
         .json(&body)
         .send()
@@ -55,9 +57,19 @@ pub async fn completion(messages: &[Message]) -> Result<Action, Box<dyn std::err
     let json_response: Value = response.json().await?;
     let content_value = json_response["choices"][0]["message"]["content"].clone();
 
-    match serde_json::from_value::<Action>(content_value) {
+    // some sanitization of the LLM response
+    let json_string = content_value.as_str()
+        .ok_or_else(|| "LLM response content was not a valid string.".to_string())?;
+    let clean_json_string = json_string.trim_matches('"'); // Remove the outer quotes if they exist
+    let inner_json_value: Value = serde_json::from_str(clean_json_string)
+        .map_err(|e| format!("Failed to parse inner JSON: {}", e))?;
+
+    match serde_json::from_value::<Action>(inner_json_value) {
         Ok(action) => Ok(action),
-        Err(e) => Err(Box::new(e)),
+        Err(e) => {
+            eprintln!("{}", json_string);
+            Err(Box::new(e))
+        },
     }
 
 }
@@ -82,8 +94,11 @@ impl Conversation {
                 Err(e) => {
                     let error_prompt = format!("Parsing Error: {}", e);
                     eprintln!("{}", error_prompt);
-                    self.history.push(Message::Assistant(error_prompt)); // Record the error
-                    continue;
+                    self.history.push(Message::Observation(error_prompt)); // Record the error
+                    // TODO: we're throwing here instead of continuing because
+                    // the error message isn't informative enough for the model
+                    // to be able to fix itself. we want to fix that!
+                    return Err(e)
                 }
             };
 
