@@ -1,0 +1,20 @@
+[CRITICAL FAILURE]
+
+## Diagnostic
+
+{% if error_type == "network" %}
+Encountered a critical network failure. Please inform the user that the network is experiencing issues and continue on with the previous conversation
+{% elif error_type == "network" %}
+Encountered a critical network failure. Please inform the user that the network is experiencing issues and continue on with the previous conversation
+{% elif error_type == "format" %}
+Your previous response failed to parse into the required Action JSON structure. You MUST correct this output. 
+
+REMINDER: Your response MUST be a single, valid JSON object that adheres strictly to the Action schema. Ensure all mandatory fields, such as 'intent', are present and correctly formatted. 
+
+DO NOT include any conversational text outside of the JSON object.
+{% endif %}
+
+## Error Log
+
+{{ error_str }}
+

@@ -14,7 +14,6 @@ impl ReadArgs {
     }
 }
 
-
 pub fn read(path: &str) -> Result<String, String> {
     // TODO: logging
     match fs::read_to_string(path) {
@@ -36,7 +35,6 @@ pub fn write(path: &str, content: &str) -> Result<String, String> {
         Err(e) => Err(format!("File write failed for {}: {}", path, e)),
     }
 }
-
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ExecArgs {
@@ -70,7 +68,10 @@ pub fn exec(args: &[String]) -> Result<String, String> {
     if output.status.success() {
         Ok(stdout) // TODO: we probably also want to expose stderr in the ok case
     } else {
-        Err(format!("Command failed with exit code {}. Stderr: {}", output.status, stderr))
+        Err(format!(
+            "Command failed with exit code {}. Stderr: {}",
+            output.status, stderr
+        ))
     }
 }
 
@@ -101,4 +102,3 @@ impl ToolCall {
         }
     }
 }
-

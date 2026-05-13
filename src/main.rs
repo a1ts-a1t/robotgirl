@@ -1,14 +1,16 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, env};
 
 use axum::{Router, routing::post};
+use tower_http::services::ServeDir;
 
-use crate::{api::{handle_chat}, conversation::Conversation};
+use crate::{api::handle_chat, conversation::Conversation};
 
 mod action;
-mod tools;
-mod message;
-mod conversation;
 mod api;
+mod config;
+mod conversation;
+mod message;
+mod tools;
 
 #[tokio::main]
 async fn main() {
@@ -17,12 +19,20 @@ async fn main() {
 
     // Define the routes
     let app = Router::new()
-        .route("/chat", post(handle_chat))
+        .nest_service("/", ServeDir::new("static"))
+        .route("/api/chat", post(handle_chat))
         .with_state(sessions_state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    println!("RobotGirl Server listening on http://0.0.0.0:3000");
+    let port = env::var("PORT").unwrap_or_else(|_| "3000".to_string());
+
+    let host = env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
+
+    let address = format!("{}:{}", host, port);
+
+    let listener = tokio::net::TcpListener::bind(address.clone())
+        .await
+        .unwrap();
+    println!("RobotGirl Server listening on {}", address);
 
     axum::serve(listener, app).await.unwrap();
 }
-
