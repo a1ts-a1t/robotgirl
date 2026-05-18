@@ -10,11 +10,14 @@ RUN objcopy --compress-debug-sections target/release/robotgirl ./robotgirl
 FROM docker.io/alpine:3.22.0
 
 RUN apk update
-RUN apk add git
+RUN apk add git openssh-client
 
 WORKDIR /app
 COPY . .
 COPY --from=build /robotgirl ./robotgirl
+
+RUN git config user.name RobotGirl
+RUN git config user.email robotgirl@github.com
 
 EXPOSE 3000
 CMD ["./robotgirl"]
