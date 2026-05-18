@@ -3,14 +3,14 @@ use std::{collections::HashMap, env};
 use axum::{Router, routing::post};
 use tower_http::services::ServeDir;
 
-use crate::{api::handle_chat, conversation::Conversation};
+use crate::{api::handle_chat, bootstrap::logger, conversation::Conversation};
 
 mod action;
 mod api;
-mod config;
 mod conversation;
 mod message;
 mod tools;
+mod bootstrap;
 
 #[tokio::main]
 async fn main() {
@@ -32,7 +32,7 @@ async fn main() {
     let listener = tokio::net::TcpListener::bind(address.clone())
         .await
         .unwrap();
-    println!("RobotGirl Server listening on {}", address);
+    logger().info(format!("RobotGirl Server listening on {}", address));
 
     axum::serve(listener, app).await.unwrap();
 }

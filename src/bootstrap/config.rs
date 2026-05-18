@@ -8,6 +8,7 @@ use minijinja::Error as JinjaError;
 use minijinja::{Environment, ErrorKind};
 use serde::Serialize;
 
+#[derive(Clone)]
 pub struct Config {
     jinja_env: Environment<'static>,
     llama_server_url: String,
@@ -73,6 +74,6 @@ lazy_static! {
     static ref GLOBAL_CONFIG: Mutex<Config> = Mutex::new(Config::new());
 }
 
-pub fn config() -> std::sync::MutexGuard<'static, Config> {
-    GLOBAL_CONFIG.lock().unwrap()
+pub fn config() -> Config {
+    GLOBAL_CONFIG.lock().unwrap().clone()
 }

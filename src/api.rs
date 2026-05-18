@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use axum::{Json, extract::State, http::StatusCode};
 use serde::{Deserialize, Serialize};
 
-use crate::conversation::Conversation;
+use crate::{bootstrap::logger, conversation::Conversation};
 
 // The incoming request structure from the client
 #[derive(Deserialize)]
@@ -38,8 +38,7 @@ pub async fn handle_chat(
             response: final_response,
         })),
         Err(e) => {
-            // TODO: logging
-            eprintln!("Agent execution failed: {}", e);
+            logger().error(format!("Agent execution failed: {}", e));
             Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
                 format!("Agent execution error: {}", e),

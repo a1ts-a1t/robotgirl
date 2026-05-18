@@ -4,7 +4,6 @@ use completion::completion;
 mod completion;
 mod error_prompts;
 
-
 pub struct Conversation {
     history: Vec<Message>,
 }
@@ -29,7 +28,8 @@ impl Conversation {
                 Ok(action) => action,
                 Err(e) => {
                     self.history.push(Message::Observation(format!("{}", e)));
-                    continue
+                    return Err(e)
+                    // continue
                 }
             };
 

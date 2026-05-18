@@ -2,7 +2,7 @@ use std::error::Error;
 
 use minijinja::context;
 
-use crate::config::config;
+use crate::bootstrap::config;
 
 pub fn error_prompt<E: Error>(error_type: &str, error: E) -> String {
     let context = context! {

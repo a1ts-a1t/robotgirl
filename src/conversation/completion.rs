@@ -5,7 +5,8 @@ use reqwest::{Client, Response};
 use serde_json::{Value, json};
 
 use crate::conversation::error_prompts::error_prompt;
-use crate::{action::Action, config::config, message::Message};
+use crate::{action::Action, message::Message};
+use crate::bootstrap::{config, logger};
 
 fn create_body(messages: &[Message]) -> Result<Value, Box<dyn Error>> {
     let base_system_prompt = config()
@@ -41,6 +42,7 @@ async fn fetch_model_response(body: Value) -> Result<Response, Box<dyn Error>> {
         .send()
         .await
         .and_then(Response::error_for_status)
+        .inspect_err(|e| logger().error(format!("Error while fetching model response: {}", e)))
         .map_err(|e| error_prompt("network", e))?;
 
     Ok(response)
@@ -52,6 +54,7 @@ async fn fetch_model_response(body: Value) -> Result<Response, Box<dyn Error>> {
 async fn sanitize_response(response: Response) -> Result<String, Box<dyn Error>> {
     let json: Value = response.json()
         .await
+        .inspect_err(|e| logger().error(format!("Error while sanitizing model repsonse: {}", e)))
         .map_err(|e| error_prompt("format", e))?;
 
     let content_value = json["choices"][0]["message"]["content"].clone();
@@ -65,13 +68,16 @@ async fn sanitize_response(response: Response) -> Result<String, Box<dyn Error>>
 
 pub async fn completion(messages: &[Message]) -> Result<Action, Box<dyn Error>> {
     let body = create_body(messages)?;
-
-    println!("{}", serde_json::to_string_pretty(&body).unwrap());
+    logger().info(format!("Requesting model response with body: {}", serde_json::to_string_pretty(&body).unwrap()));
 
     let response = fetch_model_response(body).await?;
+    logger().info(format!("Model response: {:?}", response));
+
     let sanitized_response = sanitize_response(response).await?;
+    logger().info(format!("Sanitized model response: {}", sanitized_response));
 
     let action = serde_json::from_str::<Action>(&sanitized_response)
+        .inspect_err(|e| logger().error(format!("Error while deserializing model response: {}", e)))
         .map_err(|e| error_prompt("format", e))?;
 
     Ok(action)
