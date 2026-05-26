@@ -18,7 +18,9 @@ COPY --from=build /robotgirl ./robotgirl
 
 RUN git config user.name RobotGirl
 RUN git config user.email robotgirl@github.com
-RUN git config --global url."https://${GH_PAT}@github.com/".insteadOf "https://github.com"
+RUN --mount=type=secret,id=env \
+    export $(cat /run/secrets/env | xargs) && \
+    git config --global url."https://$GH_PAT@github.com/".insteadOf "https://github.com"
 
 EXPOSE 3000
 CMD ["./robotgirl"]
