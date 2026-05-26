@@ -7,10 +7,10 @@ use crate::{api::handle_chat, bootstrap::logger, conversation::Conversation};
 
 mod action;
 mod api;
+mod bootstrap;
 mod conversation;
 mod message;
 mod tools;
-mod bootstrap;
 
 #[tokio::main]
 async fn main() {

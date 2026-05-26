@@ -12,7 +12,7 @@ use serde::Serialize;
 pub struct Config {
     jinja_env: Environment<'static>,
     llama_server_url: String,
-    model: String, 
+    model: String,
     temperature: f64,
 }
 
@@ -32,13 +32,19 @@ impl Config {
             }
         });
 
-        let llama_server_url = env::var("LLAMA_SERVER_URL").unwrap_or("http://localhost:8080".to_string());
+        let llama_server_url =
+            env::var("LLAMA_SERVER_URL").unwrap_or("http://localhost:8080".to_string());
         let model = env::var("MODEL").unwrap_or("gemma-4-e4b".to_string());
         let temperature = env::var("TEMPERATURE")
             .ok()
             .and_then(|s| s.parse::<f64>().ok())
             .unwrap_or(0.1);
-        Self { jinja_env, llama_server_url, model, temperature }
+        Self {
+            jinja_env,
+            llama_server_url,
+            model,
+            temperature,
+        }
     }
 
     pub fn load_prompt<S: Serialize>(
@@ -66,7 +72,7 @@ impl Config {
     }
 
     pub fn temperature(&self) -> f64 {
-        self.temperature.clone()
+        self.temperature
     }
 }
 

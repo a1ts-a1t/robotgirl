@@ -20,13 +20,16 @@ pub fn read(path: &str) -> Result<String, String> {
     logger().info(format!("Attempting to read from {}", path));
     match fs::read_to_string(path) {
         Ok(content) => {
-            logger().info(format!("Successfully read content from {}: {}", path, content));
+            logger().info(format!(
+                "Successfully read content from {}: {}",
+                path, content
+            ));
             Ok(content)
-        },
+        }
         Err(e) => {
             logger().error(format!("Error reading from {}: {}", path, e));
             Err(format!("File read failed for {}: {}", path, e))
-        },
+        }
     }
 }
 
@@ -42,11 +45,11 @@ pub fn write(path: &str, content: &str) -> Result<String, String> {
         Ok(_) => {
             logger().info(format!("Successfully wrote to {}: {}", path, content));
             Ok("".to_string()) // TODO: surely we can improve on this return
-        },
+        }
         Err(e) => {
             logger().error(format!("Error writing to {}: {}", path, e));
             Err(format!("File write failed for {}: {}", path, e))
-        },
+        }
     }
 }
 
@@ -81,7 +84,10 @@ pub fn exec(args: &[String]) -> Result<String, String> {
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();
 
-    logger().info(format!("Command executed with status code {:?}", output.status.code()));
+    logger().info(format!(
+        "Command executed with status code {:?}",
+        output.status.code()
+    ));
     logger().info(format!("Stdout: {:?}", stdout));
     logger().info(format!("Stderr: {:?}", stderr));
 

@@ -16,4 +16,3 @@ pub fn error_prompt<E: Error>(error_type: &str, error: E) -> String {
         .load_prompt("COMPLETION_ERROR.md", context)
         .unwrap_or(fallback_message)
 }
-
