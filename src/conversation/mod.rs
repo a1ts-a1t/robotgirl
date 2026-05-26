@@ -28,7 +28,7 @@ impl Conversation {
                 Ok(action) => action,
                 Err(e) => {
                     self.history.push(Message::Observation(format!("{}", e)));
-                    return Err(e)
+                    return Err(e);
                     // continue
                 }
             };
@@ -44,20 +44,18 @@ impl Conversation {
                     let tool_result = tool_call.call();
                     let tool_name = tool_call.name();
 
-                    let observation: String;
-                    match tool_result {
+                    let observation = match tool_result {
                         Ok(res) => {
                             // TODO: standardize formatting
-                            observation = format!(
+                            format!(
                                 "[OBSERVATION] Tool '{}' executed successfully. Result: {}",
                                 tool_name, res
-                            );
+                            )
                         }
                         Err(e) => {
-                            observation =
-                                format!("[OBSERVATION] Tool '{}' failed. Error: {}", tool_name, e);
+                            format!("[OBSERVATION] Tool '{}' failed. Error: {}", tool_name, e)
                         }
-                    }
+                    };
 
                     self.history.push(Message::Assistant(
                         serde_json::to_string(&tool_call).unwrap(),

@@ -19,6 +19,7 @@ impl Logger {
         println!("{}", lines.join("\n"));
     }
 
+    #[expect(unused)]
     pub fn warn(&self, message: String) {
         let options = Options::new(termwidth())
             .initial_indent("[WARN]  ")
@@ -43,4 +44,3 @@ lazy_static! {
 pub fn logger() -> Logger {
     GLOBAL_LOGGER.lock().unwrap().clone()
 }
-

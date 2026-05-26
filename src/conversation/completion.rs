@@ -1,16 +1,16 @@
-use std::{collections::VecDeque};
+use std::collections::VecDeque;
 use std::error::Error;
 
 use reqwest::{Client, Response};
 use serde_json::{Value, json};
 
+use crate::bootstrap::{config, logger};
 use crate::conversation::error_prompts::error_prompt;
 use crate::{action::Action, message::Message};
-use crate::bootstrap::{config, logger};
 
 fn create_body(messages: &[Message]) -> Result<Value, Box<dyn Error>> {
     let base_system_prompt = config()
-        .load_prompt("SYSTEM_PROMPT.md", {})
+        .load_prompt("SYSTEM_PROMPT.md", ())
         .map_err(|_| "Failed to load system prompt")?;
 
     let mut api_messages: VecDeque<Value> = messages
@@ -25,7 +25,7 @@ fn create_body(messages: &[Message]) -> Result<Value, Box<dyn Error>> {
     api_messages.push_front(json!({ "role": "system", "content": base_system_prompt }));
 
     Ok(json!({
-        "model": config().model(), 
+        "model": config().model(),
         "temperature": config().temperature(),
         "response_format": { "type": "json_object" },
         "messages": api_messages,
@@ -52,23 +52,25 @@ async fn fetch_model_response(body: Value) -> Result<Response, Box<dyn Error>> {
  * The output of this should be directly convertable deserializable into an Action.
  */
 async fn sanitize_response(response: Response) -> Result<String, Box<dyn Error>> {
-    let json: Value = response.json()
+    let json: Value = response
+        .json()
         .await
         .inspect_err(|e| logger().error(format!("Error while sanitizing model repsonse: {}", e)))
         .map_err(|e| error_prompt("format", e))?;
 
     let content_value = json["choices"][0]["message"]["content"].clone();
 
-    let json_string = content_value
-        .as_str()
-        .unwrap_or(""); // will be handled as a formatting error later
+    let json_string = content_value.as_str().unwrap_or(""); // will be handled as a formatting error later
 
     Ok(json_string.trim_matches('"').to_string())
 }
 
 pub async fn completion(messages: &[Message]) -> Result<Action, Box<dyn Error>> {
     let body = create_body(messages)?;
-    logger().info(format!("Requesting model response with body: {}", serde_json::to_string_pretty(&body).unwrap()));
+    logger().info(format!(
+        "Requesting model response with body: {}",
+        serde_json::to_string_pretty(&body).unwrap()
+    ));
 
     let response = fetch_model_response(body).await?;
     logger().info(format!("Model response: {:?}", response));
